@@ -30,6 +30,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
@@ -43,7 +44,7 @@ body {
     radial-gradient(800px 500px at 50% 100%, rgba(225, 230, 238, 0.9), transparent 45%),
     linear-gradient(165deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
   background-attachment: fixed;
-  overflow-x: hidden;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1195,6 +1196,10 @@ a {
 
 /* Responsive */
 @media (max-width: 960px) {
+  body {
+    background-attachment: scroll;
+  }
+
   .hero__grid,
   .pitch__panel,
   .pricing,
@@ -1204,18 +1209,65 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .cta-banner {
+  .hero__grid {
+    gap: 2rem;
+  }
+
+  .cta-banner,
+  .fibre-pitch__panel {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+  }
+
+  .fibre-pitch__actions,
+  .cta-banner .hero__actions,
+  .hero__actions {
+    width: 100%;
+  }
+
+  .fibre-pitch__actions .btn,
+  .cta-banner .btn,
+  .hero__actions .btn {
+    flex: 1 1 auto;
+    min-width: min(100%, 160px);
+    text-align: center;
   }
 
   .hero {
-    padding-top: 7.5rem;
+    min-height: auto;
+    padding: 7.25rem 1.15rem 3.5rem;
+  }
+
+  .section {
+    width: min(1120px, calc(100% - 1.5rem));
+    padding: 3.5rem 0;
+  }
+
+  .page-hero {
+    padding: 7.25rem 1.15rem 1.25rem;
+  }
+
+  .page-hero .display {
+    max-width: none;
   }
 
   .float-chip {
-    left: 0.75rem;
-    bottom: 0.75rem;
+    left: 0.65rem;
+    bottom: 0.65rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .float-chip strong {
+    font-size: 1.2rem;
+  }
+
+  .card {
+    min-height: 0;
+  }
+
+  .footer {
+    width: min(1120px, calc(100% - 1.5rem));
+    margin-bottom: 1.25rem;
   }
 
   .footer__grid {
@@ -1225,27 +1277,65 @@ a {
 
   .footer__inner {
     align-items: stretch;
+    padding: 1.5rem 1.25rem 1.15rem;
   }
 
   .footer__bottom {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footer__credit {
+    text-align: left;
+  }
+
+  .pitch__panel {
+    padding: 1.35rem;
+    gap: 1.25rem;
+  }
+
+  .pitch__points li {
+    border-radius: 18px;
+    line-height: 1.4;
+  }
+
+  .price-card,
+  .step,
+  .contact__panel,
+  .cta-banner,
+  .fibre-pitch__panel {
+    padding: 1.35rem;
   }
 }
 
 @media (max-width: 780px) {
+  .nav {
+    top: 0.65rem;
+    width: calc(100% - 1rem);
+    padding: 0.55rem 0.55rem 0.55rem 1rem;
+    border-radius: 22px;
+  }
+
   .nav__links {
     position: absolute;
-    top: calc(100% + 0.55rem);
+    top: calc(100% + 0.45rem);
     left: 0;
     right: 0;
     display: none;
     flex-direction: column;
     align-items: stretch;
-    padding: 0.75rem;
-    border-radius: 22px;
-    background: var(--glass-strong);
-    border: 1px solid var(--line);
-    backdrop-filter: blur(22px);
+    gap: 0.2rem;
+    padding: 0.65rem;
+    border-radius: 20px;
+    background:
+      linear-gradient(
+        155deg,
+        rgba(255, 255, 255, 0.78) 0%,
+        rgba(244, 247, 252, 0.92) 100%
+      );
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
     box-shadow: var(--shadow);
   }
 
@@ -1253,8 +1343,14 @@ a {
     display: flex;
   }
 
+  .nav__links a {
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+  }
+
   .nav__toggle {
     display: inline-flex;
+    flex-shrink: 0;
   }
 
   .nav__cta {
@@ -1262,8 +1358,114 @@ a {
     text-align: center;
   }
 
+  .display {
+    font-size: clamp(2rem, 9.5vw, 2.75rem);
+    letter-spacing: -0.025em;
+  }
+
+  .display--md {
+    font-size: clamp(1.7rem, 7.5vw, 2.25rem);
+  }
+
+  .lede {
+    font-size: 1rem;
+    max-width: none;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+  }
+
+  .intro__title {
+    font-size: clamp(2.4rem, 14vw, 4.2rem);
+    flex-wrap: wrap;
+    row-gap: 0.05em;
+  }
+
+  .intro__brand {
+    padding: 1.25rem;
+    width: 100%;
+  }
+
+  .intro__expand {
+    gap: 0.4rem 0.7rem;
+    letter-spacing: 0.1em;
+  }
+
+  .intro__tagline {
+    font-size: 0.95rem;
+    padding: 0 0.25rem;
+  }
+
+  .hero__actions {
+    flex-direction: column;
+  }
+
+  .hero__actions .btn,
+  .fibre-pitch__actions .btn,
+  .cta-banner .btn {
+    width: 100%;
+  }
+
   .contact__form {
     grid-template-columns: 1fr;
+  }
+
+  .contact__direct {
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .price-card__amount {
+    font-size: clamp(2.5rem, 12vw, 3.4rem);
+  }
+
+  .step {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .nav__mark {
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+  }
+
+  .section {
+    width: calc(100% - 1.1rem);
+    padding: 2.75rem 0;
+  }
+
+  .hero,
+  .page-hero {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .footer {
+    width: calc(100% - 1.1rem);
+  }
+
+  .float-chip {
+    position: static;
+    margin-top: 0.85rem;
+    width: fit-content;
+  }
+
+  .hero__visual {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .nav {
+    top: max(0.65rem, env(safe-area-inset-top));
+  }
+
+  .footer {
+    margin-bottom: max(1.25rem, env(safe-area-inset-bottom));
   }
 }
 

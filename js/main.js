@@ -206,26 +206,24 @@
       (context) => {
         const { isDesktop, reduceMotion: rm } = context.conditions;
 
-        if (rm) {
-          gsap.set(".reveal", { clearProps: "all", autoAlpha: 1, y: 0, x: 0 });
+        // Mobile / reduced motion: show content immediately (no lag / hidden cards)
+        if (rm || !isDesktop) {
+          gsap.set(".reveal", { clearProps: "all", autoAlpha: 1, x: 0, y: 0, rotateY: 0 });
           return;
         }
-
-        const xAmt = isDesktop ? 100 : 28;
-        const rotAmt = isDesktop ? 12 : 0;
 
         gsap.utils.toArray(".reveal").forEach((el, i) => {
           const delay = parseFloat(el.dataset.delay || "0");
           const fromLeft = i % 2 === 0;
-          const xFrom = fromLeft ? -xAmt : xAmt;
+          const xFrom = fromLeft ? -100 : 100;
 
           gsap.fromTo(
             el,
             {
               autoAlpha: 0,
               x: xFrom,
-              y: isDesktop ? 18 : 24,
-              rotateY: fromLeft ? rotAmt : -rotAmt,
+              y: 18,
+              rotateY: fromLeft ? 12 : -12,
               transformPerspective: 1000,
             },
             {
@@ -233,19 +231,18 @@
               x: 0,
               y: 0,
               rotateY: 0,
-              duration: isDesktop ? 1.2 : 0.85,
+              duration: 1.2,
               delay,
               ease: "power3.out",
               scrollTrigger: {
                 trigger: el,
-                start: "top 90%",
-                toggleActions: "play none none reverse",
+                start: "top 88%",
+                once: true,
               },
             }
           );
         });
 
-        // Section blocks: stronger Lusion left/right sweeps
         gsap.utils.toArray(".section").forEach((section, i) => {
           const dir = i % 2 === 0 ? -1 : 1;
           const head = section.querySelector(".section__head");
@@ -253,7 +250,7 @@
 
           gsap.fromTo(
             head,
-            { autoAlpha: 0, x: (isDesktop ? 80 : 24) * dir },
+            { autoAlpha: 0, x: 80 * dir },
             {
               autoAlpha: 1,
               x: 0,
@@ -262,31 +259,18 @@
               scrollTrigger: {
                 trigger: section,
                 start: "top 80%",
-                toggleActions: "play none none reverse",
+                once: true,
               },
             }
           );
         });
 
-        if (isDesktop) {
-          gsap.fromTo(
-            ".hero__glow",
-            { scale: 0.85, opacity: 0.5 },
-            {
-              scale: 1.08,
-              opacity: 1,
-              ease: "none",
-              scrollTrigger: {
-                trigger: ".hero",
-                start: "top top",
-                end: "bottom top",
-                scrub: true,
-              },
-            }
-          );
-
-          gsap.to(".product-glass", {
-            y: -40,
+        gsap.fromTo(
+          ".hero__glow",
+          { scale: 0.85, opacity: 0.5 },
+          {
+            scale: 1.08,
+            opacity: 1,
             ease: "none",
             scrollTrigger: {
               trigger: ".hero",
@@ -294,8 +278,19 @@
               end: "bottom top",
               scrub: true,
             },
-          });
-        }
+          }
+        );
+
+        gsap.to(".product-glass", {
+          y: -40,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".hero",
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
       }
     );
 
@@ -365,8 +360,9 @@
   function finishIntro() {
     sessionStorage.setItem(VISIT_KEY, "1");
 
-    // Glass starts only after S.T.A.R.S stamp + tagline finish
-    if (!reduceMotion && glassController) glassController.start();
+    // Glass shards only on desktop — too heavy on phones
+    const isDesktop = window.matchMedia("(min-width: 781px)").matches;
+    if (!reduceMotion && isDesktop && glassController) glassController.start();
 
     const outro = gsap.timeline({
       onComplete: () => {
@@ -374,6 +370,7 @@
         intro.setAttribute("aria-hidden", "true");
         document.body.classList.remove("is-intro-active");
         site.classList.add("is-ready");
+        gsap.set(".reveal", { clearProps: "all", autoAlpha: 1, x: 0, y: 0 });
         initScrollAnimations();
         initCardTilt();
         requestAnimationFrame(() => ScrollTrigger.refresh());
@@ -402,6 +399,7 @@
     site.classList.add("is-ready");
     if (instant) site.classList.add("is-instant");
     gsap.set(site, { autoAlpha: 1 });
+    gsap.set(".reveal", { clearProps: "all", autoAlpha: 1, x: 0, y: 0 });
     initScrollAnimations();
     initCardTilt();
   }

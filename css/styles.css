@@ -472,9 +472,22 @@ a {
   width: min(1120px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 3rem;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
   align-items: center;
+}
+
+.hero__copy {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+
+.hero__copy .display {
+  max-width: 12.5ch;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .hero__actions {
@@ -486,6 +499,9 @@ a {
 
 .hero__visual {
   position: relative;
+  z-index: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .product-glass {

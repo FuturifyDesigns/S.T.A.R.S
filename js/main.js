@@ -475,6 +475,27 @@
           setActive(0);
 
           if (mode === "scroll") {
+            let lastStep = 0;
+
+            const showExclusive = (index) => {
+              texts.forEach((el, i) => {
+                gsap.set(el, {
+                  autoAlpha: i === index ? 1 : 0,
+                  y: 0,
+                  overwrite: true,
+                });
+              });
+              scenes.forEach((el, i) => {
+                gsap.set(el, {
+                  autoAlpha: i === index ? 1 : 0,
+                  scale: 1,
+                  overwrite: true,
+                });
+              });
+            };
+
+            showExclusive(0);
+
             const tl = gsap.timeline({
               defaults: { ease: "none" },
               scrollTrigger: {
@@ -482,54 +503,41 @@
                 pin,
                 start: "top top",
                 end: () => `+=${Math.round(window.innerHeight * 3.1)}`,
-                scrub: 0.7,
+                scrub: 0.55,
                 anticipatePin: 1,
                 invalidateOnRefresh: true,
                 onToggle: (self) => {
                   demo.allowed = self.isActive;
                   if (self.isActive) {
-                    const i = Math.min(count - 1, Math.floor(self.progress * count));
-                    if (i === 0) formDemo?.start();
-                    else formDemo?.stop();
+                    const i = Math.min(count - 1, Math.floor(self.progress * 0.999 * count));
+                    showExclusive(i);
                     setActive(i);
+                    lastStep = i;
                   } else {
                     formDemo?.stop();
                     syncProcessVideos(0, { pauseAll: true });
                   }
                 },
                 onUpdate: (self) => {
-                  const i = Math.min(count - 1, Math.floor(self.progress * count));
-                  setActive(i);
+                  const i = Math.min(count - 1, Math.floor(self.progress * 0.999 * count));
+                  if (i !== lastStep) {
+                    showExclusive(i);
+                    setActive(i);
+                    lastStep = i;
+                  }
                   if (bar) gsap.set(bar, { scaleX: Math.max(1 / count, self.progress) });
                 },
               },
             });
 
-            for (let i = 1; i < count; i++) {
-              tl.to(texts[i - 1], { autoAlpha: 0, y: -18, duration: 0.3 }, i)
-                .to(scenes[i - 1], { autoAlpha: 0, scale: 0.97, duration: 0.3 }, i)
-                .fromTo(
-                  texts[i],
-                  { autoAlpha: 0, y: 22 },
-                  { autoAlpha: 1, y: 0, duration: 0.35, immediateRender: false },
-                  i + 0.08
-                )
-                .fromTo(
-                  scenes[i],
-                  { autoAlpha: 0, scale: 0.97 },
-                  { autoAlpha: 1, scale: 1, duration: 0.35, immediateRender: false },
-                  i + 0.08
-                )
-                .add(sceneIntro(scenes[i], false), i + 0.12);
-            }
-
-            tl.to({}, { duration: 0.45 });
+            // Scrub length only — step visibility is handled exclusively in onUpdate
+            tl.to({}, { duration: count });
 
             const scrollHandlers = dots.map((dot, i) => {
               const onClick = () => {
                 const st = tl.scrollTrigger;
                 if (!st) return;
-                const progress = (i + 0.45) / count;
+                const progress = (i + 0.5) / count;
                 const top = st.start + (st.end - st.start) * progress;
                 window.scrollTo({ top, behavior: "smooth" });
               };

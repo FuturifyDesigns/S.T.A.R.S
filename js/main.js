@@ -715,12 +715,93 @@
     });
   }
 
-  /* ---------- Form ---------- */
-  form?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    form.hidden = true;
-    if (formNote) formNote.hidden = false;
-  });
+  /* ---------- Form validation ---------- */
+  const formFields = form
+    ? {
+        name: {
+          input: form.querySelector("#contact-name"),
+          error: form.querySelector("#contact-name-error"),
+          validate(value) {
+            const v = value.trim();
+            if (!v) return "Please enter your name.";
+            if (v.length < 2) return "Name must be at least 2 characters.";
+            if (/\d/.test(v)) return "Name should not contain numbers.";
+            if (!/^[a-zA-Z\s'.-]+$/.test(v)) return "Use letters only.";
+            return "";
+          },
+        },
+        phone: {
+          input: form.querySelector("#contact-phone"),
+          error: form.querySelector("#contact-phone-error"),
+          validate(value) {
+            const digits = value.replace(/\D/g, "");
+            if (!digits) return "Please enter your phone number.";
+            const local = digits.startsWith("267") ? digits.slice(3) : digits;
+            if (local.length !== 8) return "Enter a valid 8-digit Botswana mobile number.";
+            if (!/^7\d{7}$/.test(local)) return "Mobile numbers should start with 7 (e.g. 71 234 567).";
+            return "";
+          },
+        },
+        message: {
+          input: form.querySelector("#contact-message"),
+          error: form.querySelector("#contact-message-error"),
+          validate(value) {
+            const v = value.trim();
+            if (!v) return "Tell us where you need internet.";
+            if (v.length < 10) return "Please add a bit more detail (at least 10 characters).";
+            return "";
+          },
+        },
+      }
+    : null;
+
+  function setFieldState(field, message) {
+    if (!field?.input || !field.error) return;
+    const invalid = Boolean(message);
+    field.input.setAttribute("aria-invalid", String(invalid));
+    field.input.closest(".field")?.classList.toggle("is-invalid", invalid);
+    field.error.textContent = message;
+  }
+
+  function validateField(field) {
+    if (!field?.input) return true;
+    const message = field.validate(field.input.value);
+    setFieldState(field, message);
+    return !message;
+  }
+
+  function validateForm() {
+    if (!formFields) return false;
+    let firstInvalid = null;
+    let valid = true;
+    Object.values(formFields).forEach((field) => {
+      if (!validateField(field)) {
+        valid = false;
+        if (!firstInvalid) firstInvalid = field.input;
+      }
+    });
+    firstInvalid?.focus();
+    return valid;
+  }
+
+  if (formFields) {
+    Object.values(formFields).forEach((field) => {
+      field.input?.addEventListener("input", () => {
+        if (form.dataset.touched === "1") validateField(field);
+      });
+      field.input?.addEventListener("blur", () => {
+        if (form.dataset.touched === "1") validateField(field);
+      });
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      form.dataset.touched = "1";
+      if (!validateForm()) return;
+      form.hidden = true;
+      if (formNote) formNote.hidden = false;
+    });
+  }
 
   /* ---------- Boot ---------- */
   const isHome = document.body.dataset.page === "home";

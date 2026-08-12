@@ -86,13 +86,15 @@
 
           </p>
 
-          <form class="contact__form" id="contact-form">
+          <form class="contact__form" id="contact-form" novalidate>
 
             <label class="field">
 
               <span>Name</span>
 
-              <input type="text" name="name" required placeholder="Your name" autocomplete="name" />
+              <input type="text" name="name" id="contact-name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Your name" aria-describedby="contact-name-error" />
+
+              <span class="field__error" id="contact-name-error" role="alert"></span>
 
             </label>
 
@@ -100,7 +102,9 @@
 
               <span>Phone / WhatsApp</span>
 
-              <input type="tel" name="phone" required placeholder="+267..." autocomplete="tel" />
+              <input type="tel" name="phone" id="contact-phone" required inputmode="tel" autocomplete="tel" placeholder="+267 71 234 567" aria-describedby="contact-phone-error" />
+
+              <span class="field__error" id="contact-phone-error" role="alert"></span>
 
             </label>
 
@@ -108,7 +112,9 @@
 
               <span>Where do you need internet?</span>
 
-              <textarea name="message" rows="4" placeholder="Location, use case, how soon..."></textarea>
+              <textarea name="message" id="contact-message" required minlength="10" maxlength="1000" rows="4" placeholder="Location, use case, how soon..." aria-describedby="contact-message-error"></textarea>
+
+              <span class="field__error" id="contact-message-error" role="alert"></span>
 
             </label>
 

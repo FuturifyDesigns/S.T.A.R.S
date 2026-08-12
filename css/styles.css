@@ -960,6 +960,24 @@ a {
   box-shadow: 0 0 0 4px rgba(80, 95, 115, 0.08);
 }
 
+.field.is-invalid input,
+.field.is-invalid textarea {
+  border-color: rgba(192, 69, 69, 0.55);
+  box-shadow: 0 0 0 4px rgba(192, 69, 69, 0.1);
+}
+
+.field__error {
+  min-height: 1.15em;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #b33a3a;
+  line-height: 1.35;
+}
+
+.field__error:empty {
+  display: none;
+}
+
 .contact__form .btn {
   grid-column: 1 / -1;
   justify-self: start;

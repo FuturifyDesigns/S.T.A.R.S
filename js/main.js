@@ -241,60 +241,93 @@
   }
 
   /* ---------- Process guide ---------- */
-  function typeInFields(scene, immediateRender = true) {
-    const typed = scene.querySelectorAll("[data-type]");
-    if (!typed.length) return gsap.timeline();
+  function createFormDemo(scene) {
+    const root = scene?.querySelector("[data-form-demo]");
+    if (!root) return null;
 
-    const playMode = immediateRender;
-    const tl = gsap.timeline();
-    const charDur = playMode ? 0.042 : 0.007;
-    const minDur = playMode ? 0.45 : 0.14;
+    const body = root.querySelector(".browser-demo__body");
+    const fields = [...root.querySelectorAll("[data-type]")];
+    const btn = root.querySelector(".guide-form__btn");
+    const done = root.querySelector(".browser-demo__done");
+    let cancelled = true;
+    let timer = 0;
+    let running = false;
 
-    typed.forEach((el) => {
-      el.textContent = "";
-    });
+    const wait = (ms) =>
+      new Promise((resolve) => {
+        timer = window.setTimeout(resolve, ms);
+      });
 
-    typed.forEach((el) => {
-      const full = el.getAttribute("data-type") || "";
-      const wrap = el.closest(".guide-form__input");
-      const proxy = { n: 0 };
+    const reset = () => {
+      fields.forEach((el) => {
+        el.textContent = "";
+        el.closest(".guide-form__input")?.classList.remove("is-focused");
+      });
+      btn?.classList.remove("is-submitting");
+      done?.classList.remove("is-visible");
+      if (body) body.scrollTop = 0;
+    };
 
-      tl.to(proxy, {
-        n: full.length,
-        duration: Math.max(minDur, full.length * charDur),
-        ease: "none",
-        immediateRender: false,
-        onStart: () => {
-          scene.querySelectorAll(".guide-form__input").forEach((input) => {
-            input.classList.remove("is-focused");
-          });
+    const scrollTo = (wrap) => {
+      if (!body || !wrap) return;
+      const top = wrap.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - 18;
+      body.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    };
+
+    const run = async () => {
+      running = true;
+      cancelled = false;
+      while (!cancelled) {
+        reset();
+        await wait(600);
+        if (cancelled) break;
+
+        for (const el of fields) {
+          if (cancelled) break;
+          const wrap = el.closest(".guide-form__input");
+          const full = el.getAttribute("data-type") || "";
           wrap?.classList.add("is-focused");
-        },
-        onUpdate: () => {
-          el.textContent = full.slice(0, Math.round(proxy.n));
-        },
-        onComplete: () => wrap?.classList.remove("is-focused"),
-        onReverseComplete: () => {
+          scrollTo(wrap);
+
+          for (let c = 1; c <= full.length; c++) {
+            if (cancelled) break;
+            el.textContent = full.slice(0, c);
+            await wait(45);
+          }
+
+          if (cancelled) break;
           wrap?.classList.remove("is-focused");
-          el.textContent = "";
-        },
-      }, "+=0.06");
-    });
+          await wait(380);
+        }
 
-    const btn = scene.querySelector(".guide-form__btn");
-    if (btn) {
-      tl.fromTo(
-        btn,
-        { scale: 1 },
-        { scale: 1.05, duration: playMode ? 0.22 : 0.12, ease: "power2.out", yoyo: true, repeat: 1 },
-        "+=0.04"
-      );
-    }
+        if (cancelled) break;
+        btn?.classList.add("is-submitting");
+        await wait(1200);
+        if (cancelled) break;
+        btn?.classList.remove("is-submitting");
+        done?.classList.add("is-visible");
+        await wait(2800);
+      }
+      running = false;
+    };
 
-    return tl;
+    return {
+      start() {
+        if (running) return;
+        run();
+      },
+      stop() {
+        cancelled = true;
+        window.clearTimeout(timer);
+        running = false;
+        reset();
+      },
+    };
   }
 
   function sceneIntro(scene, immediateRender = true) {
+    if (scene.querySelector("[data-form-demo]")) return gsap.timeline();
+
     const tl = gsap.timeline();
     const pops = scene.querySelectorAll("[data-pop]");
     const draws = scene.querySelectorAll("[data-draw]");
@@ -343,11 +376,6 @@
         0.1
       );
     }
-
-    const typing = typeInFields(scene, immediateRender);
-    if (typing.getChildren().length) {
-      tl.add(typing, pops.length || draws.length ? 0.2 : 0);
-    }
     return tl;
   }
 
@@ -369,6 +397,9 @@
       const count = texts.length;
       if (!count) return;
 
+      const formDemo = createFormDemo(scenes[0]);
+      const demo = { allowed: false };
+
       const setActive = (index) => {
         texts.forEach((el, i) => el.classList.toggle("is-active", i === index));
         scenes.forEach((el, i) => el.classList.toggle("is-active", i === index));
@@ -377,6 +408,8 @@
           el.setAttribute("aria-selected", String(i === index));
         });
         if (kickerNum) kickerNum.textContent = String(index + 1).padStart(2, "0");
+        if (index === 0 && demo.allowed) formDemo?.start();
+        else if (index !== 0) formDemo?.stop();
       };
 
       const mm = gsap.matchMedia();
@@ -391,8 +424,15 @@
 
           if (rm || !isDesktop) {
             gsap.set([texts, scenes], { clearProps: "all" });
+            demo.allowed = !rm;
             setActive(0);
-            return;
+            if (rm) {
+              formDemo?.stop();
+              scenes[0].querySelectorAll("[data-type]").forEach((el) => {
+                el.textContent = el.getAttribute("data-type") || "";
+              });
+            }
+            return () => formDemo?.stop();
           }
 
           gsap.set(texts, { autoAlpha: 0, y: 22 });
@@ -413,6 +453,16 @@
                 scrub: 0.7,
                 anticipatePin: 1,
                 invalidateOnRefresh: true,
+                onToggle: (self) => {
+                  demo.allowed = self.isActive;
+                  if (self.isActive) {
+                    const i = Math.min(count - 1, Math.floor(self.progress * count));
+                    if (i === 0) formDemo?.start();
+                    else formDemo?.stop();
+                  } else {
+                    formDemo?.stop();
+                  }
+                },
                 onUpdate: (self) => {
                   const i = Math.min(count - 1, Math.floor(self.progress * count));
                   setActive(i);
@@ -420,8 +470,6 @@
                 },
               },
             });
-
-            tl.add(sceneIntro(scenes[0], false), 0);
 
             for (let i = 1; i < count; i++) {
               tl.to(texts[i - 1], { autoAlpha: 0, y: -18, duration: 0.3 }, i)
@@ -456,6 +504,7 @@
             });
 
             return () => {
+              formDemo?.stop();
               scrollHandlers.forEach(([dot, onClick]) => dot.removeEventListener("click", onClick));
               tl.scrollTrigger?.kill();
               tl.kill();
@@ -502,7 +551,7 @@
 
           const armLoop = () => {
             loop?.kill();
-            loop = gsap.delayedCall(5.2, () => {
+            loop = gsap.delayedCall(current === 0 ? 12 : 4.2, () => {
               showStep((current + 1) % count);
               armLoop();
             });
@@ -515,16 +564,30 @@
             start: "top 85%",
             end: "bottom 15%",
             onEnter: () => {
+              demo.allowed = true;
               if (!loop) {
-                sceneIntro(scenes[0]);
+                formDemo?.start();
                 armLoop();
               } else {
                 loop.play();
+                if (current === 0) formDemo?.start();
               }
             },
-            onEnterBack: () => loop?.play(),
-            onLeave: () => loop?.pause(),
-            onLeaveBack: () => loop?.pause(),
+            onEnterBack: () => {
+              demo.allowed = true;
+              loop?.play();
+              if (current === 0) formDemo?.start();
+            },
+            onLeave: () => {
+              demo.allowed = false;
+              loop?.pause();
+              formDemo?.stop();
+            },
+            onLeaveBack: () => {
+              demo.allowed = false;
+              loop?.pause();
+              formDemo?.stop();
+            },
           });
 
           const playHandlers = dots.map((dot, i) => {
@@ -543,6 +606,7 @@
             loop?.kill();
             hold?.kill();
             visibility.kill();
+            formDemo?.stop();
           };
         }
       );

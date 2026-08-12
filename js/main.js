@@ -14,16 +14,28 @@
   const navLinks = document.querySelector(".nav__links");
 
   /* ---------- Mobile nav ---------- */
+  const closeNav = () => {
+    navLinks?.classList.remove("is-open");
+    navToggle?.setAttribute("aria-expanded", "false");
+  };
+
   navToggle?.addEventListener("click", () => {
     const open = navLinks.classList.toggle("is-open");
     navToggle.setAttribute("aria-expanded", String(open));
   });
 
   navLinks?.querySelectorAll("a").forEach((a) => {
-    a.addEventListener("click", () => {
-      navLinks.classList.remove("is-open");
-      navToggle?.setAttribute("aria-expanded", "false");
-    });
+    a.addEventListener("click", closeNav);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!navLinks?.classList.contains("is-open")) return;
+    if (e.target.closest(".nav")) return;
+    closeNav();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeNav();
   });
 
   /* Home logo is a normal link to index.html — no hash scroll hijack */
@@ -399,28 +411,95 @@
 
       const formDemo = createFormDemo(scenes[0]);
       const demo = { allowed: false };
+      let mobileVideoObserver = null;
+
+      const prepareVideo = (video) => {
+        video.muted = true;
+        video.defaultMuted = true;
+        video.volume = 0;
+        video.loop = true;
+        video.playsInline = true;
+        video.setAttribute("muted", "");
+        video.setAttribute("playsinline", "");
+        video.setAttribute("webkit-playsinline", "");
+      };
+
+      const playVideoSafe = (video) => {
+        prepareVideo(video);
+        const tryPlay = () => {
+          const p = video.play();
+          if (p && typeof p.catch === "function") p.catch(() => {});
+        };
+        if (video.readyState >= 2) {
+          tryPlay();
+        } else {
+          video.load();
+          video.addEventListener("loadeddata", tryPlay, { once: true });
+          tryPlay();
+        }
+      };
 
       const syncProcessVideos = (index, { playAll = false, pauseAll = false } = {}) => {
         root.querySelectorAll(".process__video").forEach((video, i) => {
-          video.muted = true;
-          video.defaultMuted = true;
-          video.volume = 0;
-          video.loop = true;
-          video.playsInline = true;
+          prepareVideo(video);
           if (pauseAll) {
             video.pause();
             return;
           }
           const shouldPlay = playAll || i === index;
           if (shouldPlay) {
-            if (video.paused) {
-              video.currentTime = 0;
-              video.play()?.catch(() => {});
-            }
+            playVideoSafe(video);
           } else {
             video.pause();
           }
         });
+      };
+
+      const startMobileVideoObserver = () => {
+        mobileVideoObserver?.disconnect();
+        const videos = root.querySelectorAll(".process__video");
+        videos.forEach((video) => {
+          prepareVideo(video);
+          video.preload = "auto";
+          video.pause();
+        });
+
+        if (!("IntersectionObserver" in window)) {
+          videos.forEach((video) => playVideoSafe(video));
+          return;
+        }
+
+        mobileVideoObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              const video = entry.target;
+              if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
+                playVideoSafe(video);
+              } else {
+                video.pause();
+              }
+            });
+          },
+          { threshold: [0, 0.35, 0.6], rootMargin: "40px 0px" }
+        );
+
+        videos.forEach((video) => mobileVideoObserver.observe(video));
+
+        const unlock = () => {
+          videos.forEach((video) => {
+            const rect = video.getBoundingClientRect();
+            const visible = rect.bottom > 0 && rect.top < window.innerHeight;
+            if (visible) playVideoSafe(video);
+          });
+        };
+        document.addEventListener("touchstart", unlock, { once: true, passive: true });
+        document.addEventListener("click", unlock, { once: true });
+      };
+
+      const stopMobileVideoObserver = () => {
+        mobileVideoObserver?.disconnect();
+        mobileVideoObserver = null;
+        root.querySelectorAll(".process__video").forEach((video) => video.pause());
       };
 
       const setActive = (index) => {
@@ -434,11 +513,11 @@
         if (index === 0 && demo.allowed) formDemo?.start();
         else if (index !== 0) formDemo?.stop();
         const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        const isDesktopNow = window.matchMedia("(min-width: 781px)").matches;
-        if (prefersReduce) {
-          syncProcessVideos(index, { pauseAll: true });
-        } else if (!isDesktopNow) {
-          syncProcessVideos(index, { playAll: true });
+        /* Match CSS: stacked process layout below 961px */
+        const isDesktopNow = window.matchMedia("(min-width: 961px)").matches;
+        if (prefersReduce || !isDesktopNow) {
+          /* Mobile uses IntersectionObserver; don't fight it here */
+          if (prefersReduce) syncProcessVideos(index, { pauseAll: true });
         } else if (demo.allowed) {
           syncProcessVideos(index);
         } else {
@@ -450,7 +529,7 @@
 
       mm.add(
         {
-          isDesktop: "(min-width: 781px)",
+          isDesktop: "(min-width: 961px)",
           reduceMotion: "(prefers-reduced-motion: reduce)",
         },
         (context) => {
@@ -462,10 +541,18 @@
             setActive(0);
             if (rm) {
               formDemo?.stop();
+              stopMobileVideoObserver();
               syncProcessVideos(0, { pauseAll: true });
+            } else {
+              startMobileVideoObserver();
             }
-            return () => formDemo?.stop();
+            return () => {
+              formDemo?.stop();
+              stopMobileVideoObserver();
+            };
           }
+
+          stopMobileVideoObserver();
 
           gsap.set(texts, { autoAlpha: 0, y: 22 });
           gsap.set(scenes, { autoAlpha: 0, scale: 0.97 });

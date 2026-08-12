@@ -2115,7 +2115,7 @@ a {
     transform: none !important;
     display: block;
     width: 100%;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: auto;
     min-height: 0;
     height: auto;
     padding: 0;
@@ -2126,11 +2126,14 @@ a {
   }
 
   .process__video {
-    position: absolute;
-    inset: 0;
+    position: relative;
+    inset: auto;
+    display: block;
     width: 100%;
-    height: 100%;
+    height: auto;
+    aspect-ratio: 16 / 10;
     object-fit: cover;
+    background: #11151c;
   }
 
   .browser-demo {
@@ -2321,6 +2324,10 @@ a {
   }
 
   .process__scene {
+    aspect-ratio: auto;
+  }
+
+  .process__video {
     aspect-ratio: 4 / 3;
   }
 

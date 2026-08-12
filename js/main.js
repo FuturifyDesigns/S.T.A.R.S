@@ -412,30 +412,37 @@
       const formDemo = createFormDemo(scenes[0]);
       const demo = { allowed: false };
       let mobileVideoObserver = null;
+      let mobileGestureAbort = null;
 
       const prepareVideo = (video) => {
+        if (!video) return;
+        /* Prefer src on <video> — more reliable on iOS than <source> */
+        const source = video.querySelector("source");
+        if (source?.getAttribute("src") && !video.getAttribute("src")) {
+          video.src = source.getAttribute("src");
+        }
         video.muted = true;
         video.defaultMuted = true;
         video.volume = 0;
         video.loop = true;
+        video.autoplay = true;
         video.playsInline = true;
         video.setAttribute("muted", "");
+        video.setAttribute("autoplay", "");
         video.setAttribute("playsinline", "");
         video.setAttribute("webkit-playsinline", "");
+        video.setAttribute("preload", "auto");
       };
 
       const playVideoSafe = (video) => {
+        if (!video) return;
         prepareVideo(video);
-        const tryPlay = () => {
-          const p = video.play();
-          if (p && typeof p.catch === "function") p.catch(() => {});
-        };
-        if (video.readyState >= 2) {
-          tryPlay();
-        } else {
-          video.load();
-          video.addEventListener("loadeddata", tryPlay, { once: true });
-          tryPlay();
+        if (!video.paused && !video.ended) return;
+        const p = video.play();
+        if (p && typeof p.catch === "function") {
+          p.catch(() => {
+            /* Autoplay blocked — gesture handlers will retry */
+          });
         }
       };
 
@@ -447,58 +454,69 @@
             return;
           }
           const shouldPlay = playAll || i === index;
-          if (shouldPlay) {
-            playVideoSafe(video);
-          } else {
-            video.pause();
-          }
+          if (shouldPlay) playVideoSafe(video);
+          else video.pause();
+        });
+      };
+
+      const playVisibleMobileVideos = () => {
+        root.querySelectorAll(".process__scene").forEach((scene) => {
+          const video = scene.querySelector(".process__video");
+          if (!video) return;
+          const rect = scene.getBoundingClientRect();
+          const vh = window.innerHeight || document.documentElement.clientHeight;
+          const visible = rect.bottom > 48 && rect.top < vh - 48;
+          if (visible) playVideoSafe(video);
+          else video.pause();
         });
       };
 
       const startMobileVideoObserver = () => {
         mobileVideoObserver?.disconnect();
-        const videos = root.querySelectorAll(".process__video");
-        videos.forEach((video) => {
-          prepareVideo(video);
-          video.preload = "auto";
-          video.pause();
-        });
+        mobileGestureAbort?.abort();
+        mobileGestureAbort = new AbortController();
+        const { signal } = mobileGestureAbort;
 
-        if (!("IntersectionObserver" in window)) {
-          videos.forEach((video) => playVideoSafe(video));
-          return;
+        const sceneEls = root.querySelectorAll(".process__scene");
+        sceneEls.forEach((scene) => prepareVideo(scene.querySelector(".process__video")));
+
+        if ("IntersectionObserver" in window) {
+          mobileVideoObserver = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                const video = entry.target.querySelector(".process__video");
+                if (!video) return;
+                if (entry.isIntersecting) playVideoSafe(video);
+                else video.pause();
+              });
+            },
+            { threshold: [0, 0.15, 0.4], rootMargin: "80px 0px" }
+          );
+          sceneEls.forEach((scene) => mobileVideoObserver.observe(scene));
         }
 
-        mobileVideoObserver = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              const video = entry.target;
-              if (entry.isIntersecting && entry.intersectionRatio >= 0.35) {
-                playVideoSafe(video);
-              } else {
-                video.pause();
-              }
-            });
+        playVisibleMobileVideos();
+        window.setTimeout(playVisibleMobileVideos, 250);
+        window.setTimeout(playVisibleMobileVideos, 1000);
+
+        const kick = () => playVisibleMobileVideos();
+        window.addEventListener("touchstart", kick, { passive: true, signal });
+        window.addEventListener("touchend", kick, { passive: true, signal });
+        window.addEventListener("scroll", kick, { passive: true, signal });
+        document.addEventListener(
+          "visibilitychange",
+          () => {
+            if (document.visibilityState === "visible") kick();
           },
-          { threshold: [0, 0.35, 0.6], rootMargin: "40px 0px" }
+          { signal }
         );
-
-        videos.forEach((video) => mobileVideoObserver.observe(video));
-
-        const unlock = () => {
-          videos.forEach((video) => {
-            const rect = video.getBoundingClientRect();
-            const visible = rect.bottom > 0 && rect.top < window.innerHeight;
-            if (visible) playVideoSafe(video);
-          });
-        };
-        document.addEventListener("touchstart", unlock, { once: true, passive: true });
-        document.addEventListener("click", unlock, { once: true });
       };
 
       const stopMobileVideoObserver = () => {
         mobileVideoObserver?.disconnect();
         mobileVideoObserver = null;
+        mobileGestureAbort?.abort();
+        mobileGestureAbort = null;
         root.querySelectorAll(".process__video").forEach((video) => video.pause());
       };
 
@@ -513,11 +531,11 @@
         if (index === 0 && demo.allowed) formDemo?.start();
         else if (index !== 0) formDemo?.stop();
         const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        /* Match CSS: stacked process layout below 961px */
         const isDesktopNow = window.matchMedia("(min-width: 961px)").matches;
-        if (prefersReduce || !isDesktopNow) {
-          /* Mobile uses IntersectionObserver; don't fight it here */
-          if (prefersReduce) syncProcessVideos(index, { pauseAll: true });
+        if (prefersReduce) {
+          syncProcessVideos(index, { pauseAll: true });
+        } else if (!isDesktopNow) {
+          playVisibleMobileVideos();
         } else if (demo.allowed) {
           syncProcessVideos(index);
         } else {

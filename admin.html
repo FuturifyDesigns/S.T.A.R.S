@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Admin - S.T.A.R.S</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/favicon.ico" sizes="48x48" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body data-page="admin" class="admin-body">
+  <main class="admin">
+    <section class="admin__shell glass-panel" id="admin-login">
+      <p class="eyebrow">S.T.A.R.S</p>
+      <h1 class="display display--md">Admin</h1>
+      <p class="lede">Sign in to review waitlist requests.</p>
+      <form class="admin__login" id="admin-login-form" novalidate>
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="email" autocomplete="username" required placeholder="stars@stars.co.bw" />
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" name="password" autocomplete="current-password" required placeholder="••••••••" />
+        </label>
+        <p class="field__error" id="admin-login-error" role="alert"></p>
+        <button type="submit" class="btn btn--primary btn--block">Sign in</button>
+      </form>
+    </section>
+
+    <section class="admin__shell glass-panel" id="admin-dash" hidden>
+      <div class="admin__top">
+        <div>
+          <p class="eyebrow">Waiting list</p>
+          <h1 class="display display--md">Requests</h1>
+        </div>
+        <div class="admin__actions">
+          <button type="button" class="btn btn--ghost" id="admin-refresh">Refresh</button>
+          <button type="button" class="btn btn--primary" id="admin-logout">Sign out</button>
+        </div>
+      </div>
+
+      <div class="admin__stat">
+        <span class="admin__stat-label">People waiting</span>
+        <strong class="admin__stat-value" id="admin-count">—</strong>
+      </div>
+
+      <p class="admin__status" id="admin-status" aria-live="polite"></p>
+      <p class="admin__empty" id="admin-empty" hidden>No requests yet.</p>
+
+      <div class="admin__table-wrap">
+        <table class="admin__table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Message</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="admin-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

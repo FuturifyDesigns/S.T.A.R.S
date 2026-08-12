@@ -907,14 +907,71 @@
       });
     });
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       form.dataset.touched = "1";
       if (!validateForm()) return;
-      form.hidden = true;
-      if (formNote) formNote.hidden = false;
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const nameValue = formFields.name.input.value.trim();
+      const phoneValue = formFields.phone.input.value.trim();
+      const messageValue = formFields.message.input.value.trim();
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+      }
+
+      try {
+        if (!window.createStarsSupabase) {
+          throw new Error("Connection unavailable. Email stars@stars.co.bw instead.");
+        }
+        const supabase = window.createStarsSupabase();
+        const { error } = await supabase.from("waitlist_requests").insert({
+          full_name: nameValue,
+          phone: phoneValue,
+          message: messageValue,
+        });
+        if (error) throw error;
+
+        form.hidden = true;
+        if (formNote) {
+          formNote.hidden = false;
+          formNote.textContent = "Thanks — you're on the waiting list. We'll be in touch shortly.";
+        }
+        refreshWaitlistCount();
+      } catch (err) {
+        if (formNote) {
+          formNote.hidden = false;
+          formNote.textContent =
+            err?.message || "Could not send right now. Email stars@stars.co.bw or try again.";
+        }
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Request a callback";
+        }
+      }
     });
   }
+
+  /* ---------- Public waitlist count (no personal data) ---------- */
+  async function refreshWaitlistCount() {
+    const wrap = document.getElementById("waitlist-count");
+    const valueEl = document.getElementById("waitlist-count-value");
+    if (!wrap || !valueEl || !window.createStarsSupabase) return;
+    try {
+      const supabase = window.createStarsSupabase();
+      const { data, error } = await supabase.rpc("get_waitlist_count");
+      if (error) throw error;
+      const count = Number(data) || 0;
+      valueEl.textContent = String(count);
+      wrap.hidden = false;
+    } catch {
+      wrap.hidden = true;
+    }
+  }
+
+  refreshWaitlistCount();
 
   /* ---------- Boot ---------- */
   const isHome = document.body.dataset.page === "home";

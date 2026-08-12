@@ -2398,6 +2398,217 @@ a {
   }
 }
 
+/* Waitlist count (public number only) */
+.waitlist-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.75rem;
+  margin: 0 0 1.35rem;
+  padding: 0.9rem 1.05rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background:
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.42) 0%,
+      rgba(255, 255, 255, 0.08) 100%
+    );
+}
+
+.waitlist-count__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.waitlist-count__value {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.waitlist-count__note {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+/* Admin portal */
+.admin-body {
+  min-height: 100vh;
+}
+
+.admin {
+  width: min(1100px, calc(100% - 1.5rem));
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+}
+
+.admin__shell {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-radius: calc(var(--radius) + 6px);
+}
+
+.admin__login {
+  margin-top: 1.5rem;
+  display: grid;
+  gap: 0.85rem;
+  max-width: 26rem;
+}
+
+.admin__top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.admin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.admin__stat {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.admin__stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+
+.admin__stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 6vw, 2.8rem);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.admin__status,
+.admin__empty {
+  margin: 0 0 0.85rem;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.admin__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(26, 29, 35, 0.08);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.admin__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.admin__table th,
+.admin__table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.85rem 0.95rem;
+  border-bottom: 1px solid rgba(26, 29, 35, 0.08);
+  font-size: 0.92rem;
+}
+
+.admin__table th {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  background: rgba(248, 250, 252, 0.9);
+}
+
+.admin__table td {
+  color: var(--ink-soft);
+  line-height: 1.45;
+  max-width: 28ch;
+  overflow-wrap: anywhere;
+}
+
+.admin__table td:nth-child(4) {
+  max-width: 40ch;
+}
+
+.admin__table a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.admin-status {
+  font: inherit;
+  color: var(--ink);
+  border: 1px solid rgba(26, 29, 35, 0.12);
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+}
+
+@media (max-width: 720px) {
+  .admin {
+    width: calc(100% - 1rem);
+    padding-top: 1.25rem;
+  }
+
+  .admin__table {
+    min-width: 0;
+  }
+
+  .admin__table thead {
+    display: none;
+  }
+
+  .admin__table,
+  .admin__table tbody,
+  .admin__table tr,
+  .admin__table td {
+    display: block;
+    width: 100%;
+    max-width: none;
+  }
+
+  .admin__table tr {
+    padding: 0.85rem 0.9rem;
+    border-bottom: 1px solid rgba(26, 29, 35, 0.1);
+  }
+
+  .admin__table td {
+    border: 0;
+    padding: 0.35rem 0;
+  }
+
+  .admin__table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 0.15rem;
+  }
+}
+
 @supports (padding: env(safe-area-inset-bottom)) {
   .nav {
     top: max(0.65rem, env(safe-area-inset-top));

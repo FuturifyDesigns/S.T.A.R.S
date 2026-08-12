@@ -1232,7 +1232,7 @@ a {
   grid-column: 2;
   grid-row: 1 / 4;
   position: relative;
-  min-height: min(52vh, 420px);
+  min-height: min(58vh, 480px);
   border-radius: calc(var(--radius) + 6px);
   overflow: hidden;
 }
@@ -1290,6 +1290,95 @@ a {
 
 .process-home__more a:hover {
   color: var(--ink);
+}
+
+.process__scene:has(.guide-form) {
+  align-items: stretch;
+  justify-items: stretch;
+  padding: 1rem 1.15rem;
+}
+
+.guide-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.guide-form__direct {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.guide-form .contact__form {
+  margin-top: 0;
+  gap: 0.7rem;
+}
+
+.guide-form .field span {
+  font-size: 0.7rem;
+}
+
+.guide-form__input {
+  min-height: 2.7rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.35) 0%,
+      rgba(255, 255, 255, 0.05) 50%,
+      rgba(255, 255, 255, 0.12) 100%
+    );
+  border-radius: 16px;
+  padding: 0.7rem 0.9rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--ink);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -1px 0 rgba(120, 170, 185, 0.12);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.guide-form__input--area {
+  min-height: 4.6rem;
+  align-items: flex-start;
+}
+
+.guide-form__input.is-focused {
+  border-color: rgba(80, 95, 115, 0.35);
+  box-shadow: 0 0 0 4px rgba(80, 95, 115, 0.08);
+}
+
+.guide-form__caret {
+  display: none;
+  width: 1.5px;
+  height: 1em;
+  margin-left: 1px;
+  background: var(--ink);
+  vertical-align: text-bottom;
+}
+
+.guide-form__input.is-focused .guide-form__caret {
+  display: inline-block;
+  animation: guide-caret 0.85s steps(1) infinite;
+}
+
+.guide-form__btn {
+  pointer-events: none;
+  justify-self: start;
+  min-width: 180px;
+  transform-origin: left center;
+}
+
+@keyframes guide-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
 .guide-svg {

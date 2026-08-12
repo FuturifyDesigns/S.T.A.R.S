@@ -241,6 +241,59 @@
   }
 
   /* ---------- Process guide ---------- */
+  function typeInFields(scene, immediateRender = true) {
+    const typed = scene.querySelectorAll("[data-type]");
+    if (!typed.length) return gsap.timeline();
+
+    const playMode = immediateRender;
+    const tl = gsap.timeline();
+    const charDur = playMode ? 0.042 : 0.007;
+    const minDur = playMode ? 0.45 : 0.14;
+
+    typed.forEach((el) => {
+      el.textContent = "";
+    });
+
+    typed.forEach((el) => {
+      const full = el.getAttribute("data-type") || "";
+      const wrap = el.closest(".guide-form__input");
+      const proxy = { n: 0 };
+
+      tl.to(proxy, {
+        n: full.length,
+        duration: Math.max(minDur, full.length * charDur),
+        ease: "none",
+        immediateRender: false,
+        onStart: () => {
+          scene.querySelectorAll(".guide-form__input").forEach((input) => {
+            input.classList.remove("is-focused");
+          });
+          wrap?.classList.add("is-focused");
+        },
+        onUpdate: () => {
+          el.textContent = full.slice(0, Math.round(proxy.n));
+        },
+        onComplete: () => wrap?.classList.remove("is-focused"),
+        onReverseComplete: () => {
+          wrap?.classList.remove("is-focused");
+          el.textContent = "";
+        },
+      }, "+=0.06");
+    });
+
+    const btn = scene.querySelector(".guide-form__btn");
+    if (btn) {
+      tl.fromTo(
+        btn,
+        { scale: 1 },
+        { scale: 1.05, duration: playMode ? 0.22 : 0.12, ease: "power2.out", yoyo: true, repeat: 1 },
+        "+=0.04"
+      );
+    }
+
+    return tl;
+  }
+
   function sceneIntro(scene, immediateRender = true) {
     const tl = gsap.timeline();
     const pops = scene.querySelectorAll("[data-pop]");
@@ -289,6 +342,11 @@
         },
         0.1
       );
+    }
+
+    const typing = typeInFields(scene, immediateRender);
+    if (typing.getChildren().length) {
+      tl.add(typing, pops.length || draws.length ? 0.2 : 0);
     }
     return tl;
   }
@@ -362,6 +420,8 @@
                 },
               },
             });
+
+            tl.add(sceneIntro(scenes[0], false), 0);
 
             for (let i = 1; i < count; i++) {
               tl.to(texts[i - 1], { autoAlpha: 0, y: -18, duration: 0.3 }, i)
@@ -442,7 +502,7 @@
 
           const armLoop = () => {
             loop?.kill();
-            loop = gsap.delayedCall(3.4, () => {
+            loop = gsap.delayedCall(5.2, () => {
               showStep((current + 1) % count);
               armLoop();
             });

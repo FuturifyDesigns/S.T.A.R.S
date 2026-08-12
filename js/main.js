@@ -400,6 +400,29 @@
       const formDemo = createFormDemo(scenes[0]);
       const demo = { allowed: false };
 
+      const syncProcessVideos = (index, { playAll = false, pauseAll = false } = {}) => {
+        root.querySelectorAll(".process__video").forEach((video, i) => {
+          video.muted = true;
+          video.defaultMuted = true;
+          video.volume = 0;
+          video.loop = true;
+          video.playsInline = true;
+          if (pauseAll) {
+            video.pause();
+            return;
+          }
+          const shouldPlay = playAll || i === index;
+          if (shouldPlay) {
+            if (video.paused) {
+              video.currentTime = 0;
+              video.play()?.catch(() => {});
+            }
+          } else {
+            video.pause();
+          }
+        });
+      };
+
       const setActive = (index) => {
         texts.forEach((el, i) => el.classList.toggle("is-active", i === index));
         scenes.forEach((el, i) => el.classList.toggle("is-active", i === index));
@@ -410,6 +433,17 @@
         if (kickerNum) kickerNum.textContent = String(index + 1).padStart(2, "0");
         if (index === 0 && demo.allowed) formDemo?.start();
         else if (index !== 0) formDemo?.stop();
+        const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const isDesktopNow = window.matchMedia("(min-width: 781px)").matches;
+        if (prefersReduce) {
+          syncProcessVideos(index, { pauseAll: true });
+        } else if (!isDesktopNow) {
+          syncProcessVideos(index, { playAll: true });
+        } else if (demo.allowed) {
+          syncProcessVideos(index);
+        } else {
+          syncProcessVideos(index, { pauseAll: true });
+        }
       };
 
       const mm = gsap.matchMedia();
@@ -428,9 +462,7 @@
             setActive(0);
             if (rm) {
               formDemo?.stop();
-              scenes[0].querySelectorAll("[data-type]").forEach((el) => {
-                el.textContent = el.getAttribute("data-type") || "";
-              });
+              syncProcessVideos(0, { pauseAll: true });
             }
             return () => formDemo?.stop();
           }
@@ -459,8 +491,10 @@
                     const i = Math.min(count - 1, Math.floor(self.progress * count));
                     if (i === 0) formDemo?.start();
                     else formDemo?.stop();
+                    setActive(i);
                   } else {
                     formDemo?.stop();
+                    syncProcessVideos(0, { pauseAll: true });
                   }
                 },
                 onUpdate: (self) => {
@@ -572,21 +606,25 @@
                 loop.play();
                 if (current === 0) formDemo?.start();
               }
+              setActive(current);
             },
             onEnterBack: () => {
               demo.allowed = true;
               loop?.play();
               if (current === 0) formDemo?.start();
+              setActive(current);
             },
             onLeave: () => {
               demo.allowed = false;
               loop?.pause();
               formDemo?.stop();
+              syncProcessVideos(0, { pauseAll: true });
             },
             onLeaveBack: () => {
               demo.allowed = false;
               loop?.pause();
               formDemo?.stop();
+              syncProcessVideos(0, { pauseAll: true });
             },
           });
 

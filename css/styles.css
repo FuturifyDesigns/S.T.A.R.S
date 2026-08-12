@@ -1252,6 +1252,20 @@ a {
   visibility: visible;
 }
 
+.process__scene:has(.process__video) {
+  padding: 0;
+  overflow: hidden;
+  background: #11151c;
+}
+
+.process__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
 .process__bar {
   width: min(1120px, calc(100% - 2rem));
   margin: 0 auto;
@@ -2026,21 +2040,28 @@ a {
   }
 
   .process__stage {
-    display: block;
-    min-height: 340px;
+    display: grid;
+    gap: 0.75rem;
+    min-height: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    outline: none;
   }
 
   .process__scene {
     position: relative;
+    inset: auto;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block;
+    min-height: 220px;
+    border-radius: var(--radius);
+    overflow: hidden;
   }
 
   .process__scene:not([data-scene="0"]) {
-    display: none;
-  }
-
-  .process__scene[data-scene="0"] {
-    opacity: 1;
-    visibility: visible;
+    display: block;
   }
 
   .browser-demo {
